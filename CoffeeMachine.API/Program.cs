@@ -13,11 +13,11 @@ builder.Services
 .AddControllers()
 .AddJsonOptions(o =>
 {
-    o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    o.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-    o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    o.JsonSerializerOptions.WriteIndented = true;
-    o.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    //o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    //o.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    //o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    //o.JsonSerializerOptions.WriteIndented = true;
+    //o.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
 });
 
 
@@ -45,3 +45,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }// we need this to aviod an issue in our integration tests because tests framework referencing to the wrong Program. The issue described here: https://stackoverflow.com/questions/69991983/deps-file-missing-for-dotnet-6-integration-tests

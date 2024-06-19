@@ -11,7 +11,7 @@ namespace CoffeeMachine.Tests
     public class CoffeeMachineControllerTests
     {
         [Fact]
-        public void BrewCoffee_ReturnsOkWithPipingHotCoffee()
+        public void MakeCoffee_ReturnsOkWithPipingHotCoffee()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
@@ -34,7 +34,7 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void BrewCoffee_ReturnsImATeapotOnAprilFirst()
+        public void MakeCoffee_ReturnsImATeapotOnAprilFirst()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
@@ -52,7 +52,7 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void BrewCoffee_ReturnsServiceUnavailableOnFifthCall()
+        public void MakeCoffee_ReturnsServiceUnavailableOnFifthCall()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
@@ -78,7 +78,7 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void BrewCoffee_ReturnsInternalServerErrorForUnknownStatusCode()
+        public void MakeCoffee_ReturnsInternalServerErrorForUnknownStatusCode()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
