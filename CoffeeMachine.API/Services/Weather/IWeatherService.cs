@@ -2,6 +2,6 @@
 {
     public interface IWeatherService
     {
-        bool IsHotWeather();
+        Task<bool> IsHotWeatherAsync();
     }
 }

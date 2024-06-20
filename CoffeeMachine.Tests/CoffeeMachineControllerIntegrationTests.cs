@@ -32,7 +32,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeeMachineResponse
+                .ReturnsAsync(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.OK,
                     Message = "Your piping hot coffee is ready",
@@ -66,7 +66,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeeMachineResponse
+                .ReturnsAsync(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.ImATeapot
                 });
@@ -93,7 +93,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeeMachineResponse
+                .ReturnsAsync(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.ServiceUnavailable
                 });

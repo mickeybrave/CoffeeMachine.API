@@ -10,17 +10,17 @@ namespace CoffeeMachine.Tests
     public class CoffeeMachineControllerTests
     {
         [Fact]
-        public void MakeCoffee_ReturnsOkWithPipingHotCoffee()
+        public async Task MakeCoffee_ReturnsOkWithPipingHotCoffee()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK, Message = "Your piping hot coffee is ready", Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz") });
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK, Message = "Your piping hot coffee is ready", Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz") });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
             // Act
-            var result = controller.BrewCoffee() as ObjectResult;
+            var result = await controller.BrewCoffee() as ObjectResult;
 
             // Assert
             result.Should().NotBeNull();
@@ -33,17 +33,17 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsImATeapotOnAprilFirst()
+        public async Task MakeCoffee_ReturnsImATeapotOnAprilFirst()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ImATeapot });
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ImATeapot });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
             // Act
-            var result = controller.BrewCoffee() as StatusCodeResult;
+            var result = await controller.BrewCoffee() as StatusCodeResult;
 
             // Assert
             result.Should().NotBeNull();
@@ -51,16 +51,16 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsServiceUnavailableOnFifthCall()
+        public async Task MakeCoffee_ReturnsServiceUnavailableOnFifthCall()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.SetupSequence(service => service.MakeCoffee())
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ServiceUnavailable });
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ServiceUnavailable });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
@@ -69,7 +69,7 @@ namespace CoffeeMachine.Tests
             {
                 controller.BrewCoffee();
             }
-            var result = controller.BrewCoffee() as StatusCodeResult;
+            var result = await controller.BrewCoffee() as StatusCodeResult;
 
             // Assert
             result.Should().NotBeNull();
@@ -77,17 +77,17 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsInternalServerErrorForUnknownStatusCode()
+        public async Task MakeCoffee_ReturnsInternalServerErrorForUnknownStatusCode()
         {
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeeMachineResponse { StatusCode = (SpecalHttpCodes)999 });
+                       .ReturnsAsync(new CoffeeMachineResponse { StatusCode = (SpecalHttpCodes)999 });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
             // Act
-            var result = controller.BrewCoffee() as StatusCodeResult;
+            var result = await controller.BrewCoffee() as StatusCodeResult;
 
             // Assert
             result.Should().NotBeNull();

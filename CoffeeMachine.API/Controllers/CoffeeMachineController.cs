@@ -16,9 +16,9 @@ namespace CoffeeMachine.API.Controllers
         }
 
         [HttpGet("/brew-coffee")]
-        public IActionResult BrewCoffee()
+        public async Task<IActionResult> BrewCoffee()
         {
-            var result = _coffeeMachineService.MakeCoffee();
+            var result = await _coffeeMachineService.MakeCoffee();
 
             switch (result.StatusCode)
             {
@@ -26,7 +26,7 @@ namespace CoffeeMachine.API.Controllers
                 case SpecalHttpCodes.ServiceUnavailable:
                     return StatusCode((int)result.StatusCode);
                 case SpecalHttpCodes.OK:
-                    return Ok(new APIResult  { Message = result.Message, Prepared = result.Prepared });
+                    return Ok(new APIResult { Message = result.Message, Prepared = result.Prepared });
                 default:
                     return StatusCode((int)SpecalHttpCodes.InternalServerError);
             }

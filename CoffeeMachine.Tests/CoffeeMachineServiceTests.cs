@@ -3,6 +3,8 @@ using CoffeeMachine.API.Services.CoffeMachine;
 using CoffeeMachine.API.Services.CoffeMachine.Utilities;
 using CoffeeMachine.API.Services.Weather;
 using FluentAssertions;
+using FluentAssertions.Common;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 
@@ -17,6 +19,7 @@ namespace CoffeeMachine.Tests
         private readonly Mock<ICallCounter> _mockCallCounter;
         private readonly Mock<ICoffeeMachineSettingsValidator> _mockSettingsValidator;
         private readonly CoffeeMachineService _coffeeMachineService;
+        private readonly Mock<ILogger<ICoffeeMachineService>> _mockLogger;
 
         public CoffeeMachineServiceTests()
         {
@@ -24,6 +27,7 @@ namespace CoffeeMachine.Tests
             _mockDateTimeProvider = new Mock<IDateTimeProvider>();
             _mockCallCounter = new Mock<ICallCounter>();
             _mockSettingsValidator = new Mock<ICoffeeMachineSettingsValidator>();
+            _mockLogger = new Mock<ILogger<ICoffeeMachineService>>();
 
             var coffeeMachineSettings = new CoffeeMachineSettings
             {
@@ -42,27 +46,28 @@ namespace CoffeeMachine.Tests
                 _mockDateTimeProvider.Object,
                 _mockCallCounter.Object,
                 _mockSettingsValidator.Object,
-                mockSettings);
+                mockSettings,
+                _mockLogger.Object);
 
             // Setup default validation behavior
             _mockSettingsValidator.Setup(sv => sv.ValidateSettings(It.IsAny<CoffeeMachineSettings>()));
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsImATeapot_OnSpecialDate()
+        public async Task MakeCoffee_ReturnsImATeapot_OnSpecialDate()
         {
             // Arrange
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, 4, 1));
 
             // Act
-            var result = _coffeeMachineService.MakeCoffee();
+            var result = await _coffeeMachineService.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.ImATeapot);
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsServiceUnavailable_OnEverySpecialNumberCall()
+        public async Task MakeCoffee_ReturnsServiceUnavailable_OnEverySpecialNumberCall()
         {
             // Arrange
             _mockCallCounter.SetupSequence(cc => cc.Increment())
@@ -76,7 +81,7 @@ namespace CoffeeMachine.Tests
             var results = new List<CoffeeMachineResponse>();
             for (int i = 0; i < 5; i++)
             {
-                results.Add(_coffeeMachineService.MakeCoffee());
+                results.Add(await _coffeeMachineService.MakeCoffee());
             }
 
             // Assert
@@ -84,15 +89,15 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsOk_OnRegularCall()
+        public async Task MakeCoffee_ReturnsOk_OnRegularCall()
         {
             // Arrange
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, 3, 31));
             _mockCallCounter.Setup(cc => cc.Increment()).Returns(1);
-            _mockWeatherService.Setup(ws => ws.IsHotWeather()).Returns(false);
+            _mockWeatherService.Setup(ws => ws.IsHotWeatherAsync()).ReturnsAsync(false);
 
             // Act
-            var result = _coffeeMachineService.MakeCoffee();
+            var result = await _coffeeMachineService.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.OK);
@@ -100,15 +105,15 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsIcedCoffeeMessage_WhenHotWeather()
+        public async Task MakeCoffee_ReturnsIcedCoffeeMessage_WhenHotWeather()
         {
             // Arrange
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, 3, 31));
             _mockCallCounter.Setup(cc => cc.Increment()).Returns(1);
-            _mockWeatherService.Setup(ws => ws.IsHotWeather()).Returns(true);
+            _mockWeatherService.Setup(ws => ws.IsHotWeatherAsync()).ReturnsAsync(true);
 
             // Act
-            var result = _coffeeMachineService.MakeCoffee();
+            var result = await _coffeeMachineService.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.OK);
@@ -125,7 +130,8 @@ namespace CoffeeMachine.Tests
             var mockSettings = Options.Create(new CoffeeMachineSettings());
 
             // Act
-            Action act = () => new CoffeeMachineService(nullWeatherService, mockDateTimeProvider.Object, mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings);
+            Action act = () => new CoffeeMachineService(nullWeatherService, mockDateTimeProvider.Object, mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings,
+                _mockLogger.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -142,7 +148,8 @@ namespace CoffeeMachine.Tests
             var mockSettings = Options.Create(new CoffeeMachineSettings());
 
             // Act
-            Action act = () => new CoffeeMachineService(mockWeatherService.Object, nullDateTimeProvider, mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings);
+            Action act = () => new CoffeeMachineService(mockWeatherService.Object, nullDateTimeProvider, mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings,
+                _mockLogger.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -159,7 +166,8 @@ namespace CoffeeMachine.Tests
             var mockSettings = Options.Create(new CoffeeMachineSettings());
 
             // Act
-            Action act = () => new CoffeeMachineService(mockWeatherService.Object, mockDateTimeProvider.Object, nullCallCounter, _mockSettingsValidator.Object, mockSettings);
+            Action act = () => new CoffeeMachineService(mockWeatherService.Object, mockDateTimeProvider.Object, nullCallCounter, _mockSettingsValidator.Object, mockSettings,
+                _mockLogger.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -176,7 +184,8 @@ namespace CoffeeMachine.Tests
             IOptions<CoffeeMachineSettings> nullSettings = null;
 
             // Act
-            Action act = () => new CoffeeMachineService(mockWeatherService.Object, mockDateTimeProvider.Object, mockCallCounter.Object, _mockSettingsValidator.Object, nullSettings);
+            Action act = () => new CoffeeMachineService(mockWeatherService.Object, mockDateTimeProvider.Object, mockCallCounter.Object, _mockSettingsValidator.Object, nullSettings,
+                _mockLogger.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>()
@@ -184,7 +193,7 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsImATeapot_OnCustomSpecial_Christmas_Date()
+        public async Task MakeCoffee_ReturnsImATeapot_OnCustomSpecial_Christmas_Date()
         {
             // Arrange
             var customSettings = new CoffeeMachineSettings
@@ -197,19 +206,19 @@ namespace CoffeeMachine.Tests
                 DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
             };
             var mockSettings = Options.Create(customSettings);
-            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
 
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, customSettings.SpecialDateMonth, customSettings.SpecialDateDay));
 
             // Act
-            var result = service.MakeCoffee();
+            var result = await service.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.ImATeapot);
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsOk_WithCustomHotWeatherMessage()
+        public async Task MakeCoffee_ReturnsOk_WithCustomHotWeatherMessage()
         {
             // Arrange
             var customSettings = new CoffeeMachineSettings
@@ -222,14 +231,14 @@ namespace CoffeeMachine.Tests
                 DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
             };
             var mockSettings = Options.Create(customSettings);
-            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
 
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, 3, 31));
             _mockCallCounter.Setup(cc => cc.Increment()).Returns(1);
-            _mockWeatherService.Setup(ws => ws.IsHotWeather()).Returns(true);
+            _mockWeatherService.Setup(ws => ws.IsHotWeatherAsync()).ReturnsAsync(true);
 
             // Act
-            var result = service.MakeCoffee();
+            var result = await service.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.OK);
@@ -237,7 +246,7 @@ namespace CoffeeMachine.Tests
         }
 
         [Fact]
-        public void MakeCoffee_ReturnsOk_WithCustomNormalWeatherMessage()
+        public async Task MakeCoffee_ReturnsOk_WithCustomNormalWeatherMessage()
         {
             // Arrange
             var customSettings = new CoffeeMachineSettings
@@ -246,22 +255,114 @@ namespace CoffeeMachine.Tests
                 SpecialDateMonth = 4,
                 SpecialDateDay = 1,
                 HotWeatherMessage = "Your refreshing iced coffee is ready",
-                NormalWeatherMessage = "No coffee, but where is a planty of hot water!",
+                NormalWeatherMessage = "No coffee, but there is plenty of hot water!",
                 DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
             };
             var mockSettings = Options.Create(customSettings);
-            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
 
             _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2024, 3, 25));
             _mockCallCounter.Setup(cc => cc.Increment()).Returns(1);
-            _mockWeatherService.Setup(ws => ws.IsHotWeather()).Returns(false);
+            _mockWeatherService.Setup(ws => ws.IsHotWeatherAsync()).ReturnsAsync(false);
 
             // Act
-            var result = service.MakeCoffee();
+            var result = await service.MakeCoffee();
 
             // Assert
             result.StatusCode.Should().Be(SpecalHttpCodes.OK);
             result.Message.Should().Be(customSettings.NormalWeatherMessage);
+        }
+
+        [Fact]
+        public async Task MakeCoffee_ReturnsOk_WithCustomSettings_SpecialDate()
+        {
+            // Arrange
+            var customSettings = new CoffeeMachineSettings
+            {
+                EverySpecialNumber = 3,
+                SpecialDateMonth = 6,
+                SpecialDateDay = 15,
+                HotWeatherMessage = "Enjoy your cold brew!",
+                NormalWeatherMessage = "Enjoy your hot coffee!",
+                DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
+            };
+            var mockSettings = Options.Create(customSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
+
+            _mockDateTimeProvider.Setup(dp => dp.Today).Returns(new DateTime(2023, customSettings.SpecialDateMonth, customSettings.SpecialDateDay));
+
+            // Act
+            var result = await service.MakeCoffee();
+
+            // Assert
+            result.StatusCode.Should().Be(SpecalHttpCodes.ImATeapot);
+        }
+
+        [Fact]
+        public async Task MakeCoffee_ReturnsServiceUnavailable_OnSpecialNumberCall_CustomSettings()
+        {
+            // Arrange
+            var customSettings = new CoffeeMachineSettings
+            {
+                EverySpecialNumber = 3,
+                SpecialDateMonth = 6,
+                SpecialDateDay = 15,
+                HotWeatherMessage = "Enjoy your cold brew!",
+                NormalWeatherMessage = "Enjoy your hot coffee!",
+                DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
+            };
+            var mockSettings = Options.Create(customSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
+
+            _mockCallCounter.SetupSequence(cc => cc.Increment())
+                .Returns(1)
+                .Returns(2)
+                .Returns(3); // Third call
+
+            // Act
+            var results = new List<CoffeeMachineResponse>();
+            for (int i = 0; i < 3; i++)
+            {
+                results.Add(await service.MakeCoffee());
+            }
+
+            // Assert
+            results[2].StatusCode.Should().Be(SpecalHttpCodes.ServiceUnavailable);
+        }
+
+        [Fact]
+        public async Task MakeCoffee_ShouldReturnServiceUnavailable_WhenHttpRequestExceptionOccurs()
+        {
+            // Arrange
+            _mockWeatherService.Setup(ws => ws.IsHotWeatherAsync())
+                .ThrowsAsync(new HttpRequestException("Error communicating weather service"));
+            var customSettings = new CoffeeMachineSettings
+            {
+                EverySpecialNumber = 3,
+                SpecialDateMonth = 6,
+                SpecialDateDay = 15,
+                HotWeatherMessage = "Enjoy your cold brew!",
+                NormalWeatherMessage = "Enjoy your hot coffee!",
+                DateTimeFormatDefault = "yyyy-MM-ddTHH:mm:sszzz"
+            };
+            _mockCallCounter.SetupSequence(cc => cc.Increment())
+                .Returns(1);
+            var mockSettings = Options.Create(customSettings);
+            var service = new CoffeeMachineService(_mockWeatherService.Object, _mockDateTimeProvider.Object, _mockCallCounter.Object, _mockSettingsValidator.Object, mockSettings, _mockLogger.Object);
+            // Act
+            var result = await service.MakeCoffee();
+
+            // Assert
+            Assert.Equal(SpecalHttpCodes.ServiceUnavailable, result.StatusCode);
+            Assert.Equal(CoffeeMachineService.ErrorContactingWheatherServiceMessage, result.Message);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("HTTP request error in MakeCoffee")),
+                    It.IsAny<Exception>(),
+                    It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
+                Times.Once);
         }
     }
 }

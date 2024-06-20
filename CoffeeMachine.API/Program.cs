@@ -3,21 +3,29 @@ using CoffeeMachine.API.Services.CoffeMachine;
 using CoffeeMachine.API.Services.CoffeMachine.Utilities;
 using CoffeeMachine.API.Services.Weather;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<CoffeeMachineSettings>(builder.Configuration.GetSection("CoffeeMachineSettings"));// to be able to use it in CoffeeMachineService
+builder.Services.Configure<OpenWheatherApiSettings>(builder.Configuration.GetSection("OpenWheatherApiSettings"));// to be able to use it in CoffeeMachineService
+
+// Configure logging
+builder.Logging.AddConsole(); // Example: Add console logging
+builder.Logging.AddDebug();   // Example: Add debug logging
 
 // Add services to the container.
 builder.Services.AddControllers();
 
 
+// Register HttpClient
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ICoffeeMachineService, CoffeeMachineService>();
-builder.Services.AddSingleton<IWeatherService, WeatherService>();
 builder.Services.AddSingleton<IWeatherService, WeatherService>();
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<ICallCounter, CallCounter>();
+builder.Services.AddSingleton<IOpenWeatherApiSettingsValidator, OpenWeatherApiSettingsValidator>();
 builder.Services.AddSingleton<ICoffeeMachineSettingsValidator, CoffeeMachineSettingsValidator>();
+
+
 
 
 builder.Services.AddEndpointsApiExplorer();
