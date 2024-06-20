@@ -3,20 +3,20 @@ using Newtonsoft.Json.Linq;
 
 namespace CoffeeMachine.API.Services.Weather
 {
-    public class WeatherService : IWeatherService, IDisposable
+    public class WeatherService : IWeatherService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IWeatherHttpClient _weatherHttpClient;
         private readonly IOpenWeatherApiSettingsValidator _openWeatherApiSettingsValidator;
-        private readonly ILogger<IDisposable> _logger;
+        private readonly ILogger<WeatherService> _logger;
         private readonly OpenWheatherApiSettings _settings;
         private readonly string _apiKey;
 
-        public WeatherService(HttpClient httpClient,
+        public WeatherService(IWeatherHttpClient weatherHttpClient,
             IOptions<OpenWheatherApiSettings> settings,
             IOpenWeatherApiSettingsValidator openWeatherApiSettingsValidator,
-            ILogger<IDisposable> logger)
+            ILogger<WeatherService> logger)
         {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _weatherHttpClient = weatherHttpClient ?? throw new ArgumentNullException(nameof(weatherHttpClient));
             _openWeatherApiSettingsValidator = openWeatherApiSettingsValidator ?? throw new ArgumentNullException(nameof(openWeatherApiSettingsValidator));
             _logger = logger;
             _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
@@ -26,10 +26,7 @@ namespace CoffeeMachine.API.Services.Weather
 
             // Set API key
             _apiKey = _settings.ApiKey;
-            _httpClient.BaseAddress = new Uri(_settings.OpenWheatherApiBaseUrl);
         }
-
-       
 
         public async Task<bool> IsHotWeatherAsync()
         {
@@ -40,7 +37,7 @@ namespace CoffeeMachine.API.Services.Weather
         {
             try
             {
-                var response = await _httpClient.GetAsync($"weather?q={city}&units=metric&appid={_apiKey}");
+                var response = await _weatherHttpClient.GetWeatherDataAsync(city, _apiKey);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -66,10 +63,6 @@ namespace CoffeeMachine.API.Services.Weather
                 _logger.LogError($"Error in IsHotWeatherAsync: {ex.Message}");
                 throw;
             }
-        }
-        public void Dispose()
-        {
-            _httpClient.Dispose();
         }
     }
 

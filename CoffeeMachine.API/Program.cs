@@ -24,6 +24,7 @@ builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<ICallCounter, CallCounter>();
 builder.Services.AddSingleton<IOpenWeatherApiSettingsValidator, OpenWeatherApiSettingsValidator>();
 builder.Services.AddSingleton<ICoffeeMachineSettingsValidator, CoffeeMachineSettingsValidator>();
+builder.Services.AddHttpClient<IWeatherHttpClient, WeatherHttpClient>();
 
 
 
