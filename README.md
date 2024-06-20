@@ -13,7 +13,7 @@ Example: **WeatherService**
 
 #### Interface Segregation Principle
 
-This principle suggests that no client should be forced to depend on methods it does not use. Instead of one large interface, many small interfaces are preferred.
+This principle/pattern suggests that no client should be forced to depend on methods it does not use. Instead of one large interface, many small interfaces are preferred.
 
 Example: **IWeatherHttpClient**
 
