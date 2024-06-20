@@ -4,6 +4,6 @@ namespace CoffeeMachine.API.Services.CoffeMachine
 {
     public interface ICoffeeMachineService
     {
-        CoffeMachineRespond MakeCoffee();
+        CoffeeMachineResponse MakeCoffee();
     }
 }

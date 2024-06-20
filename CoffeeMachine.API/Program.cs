@@ -1,28 +1,24 @@
 using CoffeeMachine.API.Infra;
 using CoffeeMachine.API.Services.CoffeMachine;
+using CoffeeMachine.API.Services.CoffeMachine.Utilities;
 using CoffeeMachine.API.Services.Weather;
-using System.Text.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<CoffeeMachineSettings>(builder.Configuration.GetSection("CoffeeMachineSettings"));// to be able to use it in CoffeeMachineService
+
 // Add services to the container.
-
 builder.Services.AddControllers();
-
-builder.Services
-.AddControllers()
-.AddJsonOptions(o =>
-{
-    //o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    //o.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-    //o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    //o.JsonSerializerOptions.WriteIndented = true;
-    //o.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-});
 
 
 builder.Services.AddSingleton<ICoffeeMachineService, CoffeeMachineService>();
 builder.Services.AddSingleton<IWeatherService, WeatherService>();
+builder.Services.AddSingleton<IWeatherService, WeatherService>();
+builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddSingleton<ICallCounter, CallCounter>();
+builder.Services.AddSingleton<ICoffeeMachineSettingsValidator, CoffeeMachineSettingsValidator>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

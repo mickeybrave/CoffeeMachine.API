@@ -1,51 +1,74 @@
 ﻿using CoffeeMachine.API.Results;
+using CoffeeMachine.API.Services.CoffeMachine.Utilities;
 using CoffeeMachine.API.Services.Weather;
+using Microsoft.Extensions.Options;
 
 namespace CoffeeMachine.API.Services.CoffeMachine
 {
     public class CoffeeMachineService : ICoffeeMachineService
     {
-        private static int _callCount = 0;
+        private readonly ICallCounter _callCounter;
         private readonly IWeatherService _weatherService;
+        private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly CoffeeMachineSettings _settings;
+        private readonly ICoffeeMachineSettingsValidator _settingsValidator;
 
-        public CoffeeMachineService(IWeatherService weatherService)
+        public CoffeeMachineService(
+            IWeatherService weatherService,
+            IDateTimeProvider dateTimeProvider,
+            ICallCounter callCounter,
+            ICoffeeMachineSettingsValidator settingsValidator,
+            IOptions<CoffeeMachineSettings> settings)
         {
-            _weatherService = weatherService;
+            //constructor validation to prevent null injection
+            _weatherService = weatherService ?? throw new ArgumentNullException(nameof(weatherService));
+            _dateTimeProvider = dateTimeProvider ?? throw new ArgumentNullException(nameof(dateTimeProvider));
+            _callCounter = callCounter ?? throw new ArgumentNullException(nameof(callCounter));
+            _settingsValidator = settingsValidator ?? throw new ArgumentNullException(nameof(settingsValidator));
+            _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
+
+            // Validate settings upon construction
+            _settingsValidator.ValidateSettings(_settings);
         }
 
-        public CoffeMachineRespond MakeCoffee()
+        public CoffeeMachineResponse MakeCoffee()
         {
-            Interlocked.Increment(ref _callCount);// used insread of ++ to take care of multi thread access to coffee machine and more than 1 user or access from different client
+            // Increment the call count atomically
+            var callCount = _callCounter.Increment();
 
-            // Check for April 1st
-            if (DateTime.Today.Month == 4 && DateTime.Today.Day == 1)
+            // Check if it's the special date
+            if (IsSpecialDate())
             {
-                return new CoffeMachineRespond { StatusCode = SpecalHttpCodes.ImATeapot };
+                return new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ImATeapot };
             }
 
-            // Check if every fifth call
-            if (_callCount % 5 == 0)
+            // Check if it's every special number call
+            if (IsSpecialNumberCall(callCount))
             {
-                _callCount = 0;// prevent an issue when int reaches max value and as a result it will be min negative value -2,147,483,648
-                return new CoffeMachineRespond { StatusCode = SpecalHttpCodes.ServiceUnavailable };
+                _callCounter.Reset();
+                return new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ServiceUnavailable };
             }
 
-            // Determine the message based on weather condition (Extra Credit)
-            string message = "Your piping hot coffee is ready";
-            if (_weatherService.IsHotWeather())
-            {
-                message = "Your refreshing iced coffee is ready";
-            }
+            // Determine the message based on weather condition
+            string message = _weatherService.IsHotWeather() ? _settings.HotWeatherMessage : _settings.NormalWeatherMessage;
 
-            // Prepare response
-            return new CoffeMachineRespond
+            return new CoffeeMachineResponse
             {
                 Message = message,
-                StatusCode = SpecalHttpCodes.OK
+                StatusCode = SpecalHttpCodes.OK,
+                Prepared = _dateTimeProvider.UtcNow.ToString(_settings.DateTimeFormatDefault)
             };
-
         }
 
-      
+        private bool IsSpecialDate()
+        {
+            var today = _dateTimeProvider.Today;
+            return today.Month == _settings.SpecialDateMonth && today.Day == _settings.SpecialDateDay;
+        }
+
+        private bool IsSpecialNumberCall(int callCount)
+        {
+            return callCount % _settings.EverySpecialNumber == 0;
+        }
     }
 }

@@ -3,7 +3,9 @@ using CoffeeMachine.API.Services.CoffeMachine;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace CoffeeMachine.Tests
@@ -11,10 +13,17 @@ namespace CoffeeMachine.Tests
     public class CoffeeMachineControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
+        private readonly CoffeeMachineSettings _settings;
+
 
         public CoffeeMachineControllerIntegrationTests(WebApplicationFactory<Program> factory)
         {
             _factory = factory;
+            var configuration = new ConfigurationBuilder()
+              .AddJsonFile("appsettings.json")// adding real configuration into the integration tests to make sure that our configuration is valid. no nulls or 0
+              .Build();
+            _settings = new CoffeeMachineSettings();
+            configuration.GetSection("CoffeeMachineSettings").Bind(_settings);
         }
 
         [Fact]
@@ -23,20 +32,23 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeMachineRespond
+                .Returns(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.OK,
                     Message = "Your piping hot coffee is ready",
                     Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz")
                 });
 
+
             var client = _factory.WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
                 {
+                    services.AddSingleton(Options.Create(_settings));
                     services.AddScoped(_ => mockService.Object);
                 });
             }).CreateClient();
+
 
             // Act
             var response = await client.GetAsync("/brew-coffee");
@@ -54,7 +66,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeMachineRespond
+                .Returns(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.ImATeapot
                 });
@@ -64,6 +76,7 @@ namespace CoffeeMachine.Tests
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddScoped(_ => mockService.Object);
+                    services.AddSingleton(Options.Create(_settings));
                 });
             }).CreateClient();
 
@@ -80,7 +93,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                .Returns(new CoffeMachineRespond
+                .Returns(new CoffeeMachineResponse
                 {
                     StatusCode = SpecalHttpCodes.ServiceUnavailable
                 });
@@ -90,6 +103,7 @@ namespace CoffeeMachine.Tests
                 builder.ConfigureTestServices(services =>
                 {
                     services.AddScoped(_ => mockService.Object);
+                    services.AddSingleton(Options.Create(_settings));
                 });
             }).CreateClient();
 

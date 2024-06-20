@@ -1,7 +1,6 @@
 using CoffeeMachine.API.Controllers;
 using CoffeeMachine.API.Results;
 using CoffeeMachine.API.Services.CoffeMachine;
-using CoffeeMachine.API.Services.Weather;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -16,7 +15,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.OK, Message = "Your piping hot coffee is ready", Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz") });
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK, Message = "Your piping hot coffee is ready", Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz") });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
@@ -39,7 +38,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.ImATeapot });
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ImATeapot });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
@@ -57,11 +56,11 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.SetupSequence(service => service.MakeCoffee())
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.OK })
-                       .Returns(new CoffeMachineRespond { StatusCode = SpecalHttpCodes.ServiceUnavailable });
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.OK })
+                       .Returns(new CoffeeMachineResponse { StatusCode = SpecalHttpCodes.ServiceUnavailable });
 
             var controller = new CoffeeMachineController(mockService.Object);
 
@@ -83,7 +82,7 @@ namespace CoffeeMachine.Tests
             // Arrange
             var mockService = new Mock<ICoffeeMachineService>();
             mockService.Setup(service => service.MakeCoffee())
-                       .Returns(new CoffeMachineRespond { StatusCode = (SpecalHttpCodes)999 });
+                       .Returns(new CoffeeMachineResponse { StatusCode = (SpecalHttpCodes)999 });
 
             var controller = new CoffeeMachineController(mockService.Object);
 

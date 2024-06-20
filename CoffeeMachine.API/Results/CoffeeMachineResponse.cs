@@ -21,14 +21,14 @@
         InternalServerError = 500
 
     }
-    public struct CoffeMachineRespond
+    public struct CoffeeMachineResponse
     {
         public SpecalHttpCodes StatusCode { get; set; }
         public string Message { get; set; }
 
         public string Prepared { get; set; }
 
-        public CoffeMachineRespond()
+        public CoffeeMachineResponse()
         {
             Message = "";
             Prepared = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz");
