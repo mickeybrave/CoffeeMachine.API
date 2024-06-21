@@ -2,6 +2,7 @@
 
 ## Design
 The main idea was to use SOLID principles to make the code clean, testable, loose coupling, with single responsibilities, simple and easy to understand.
+On another way I've made it flexible, adjustable and configurable.
 
 ### Design patterns used
 
@@ -65,7 +66,9 @@ Description of main classes used:
 > CallCounter: Manages the count of calls to specific services.
 > DateTimeHelper: Extension Method for DateTime. This is the class I've used to implement one ofs special requirements in date time formatting. ISO-8601 date time formatting expected to be like "2024-06-21T10:29:07+12:00", whereas requirement is "2021-02-03T11:56:24+0900". So it is obviouse a difference between missing semicolon between timezone identifier part at the end. I am keen to the details, and I have implemented this convertor to follow precisely to the requirements. If it was just a typo, so we can easily remove it from the code.
 
- 
+ ## Configuration:
+
+ Instead to stick to constant values of 5 for 500, 30 degrees or all the rest, I've made it configurable. So 1st of April can be any date and month. Temperature can be any positive temperature etc.
 
 ## Security Key
 
