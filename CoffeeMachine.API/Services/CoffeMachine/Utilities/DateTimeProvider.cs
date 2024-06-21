@@ -3,6 +3,6 @@
     public class DateTimeProvider : IDateTimeProvider
     {
         public DateTime Today => DateTime.Today;
-        public DateTime UtcNow => DateTime.UtcNow;
+        public DateTime Now => DateTime.Now;
     }
 }

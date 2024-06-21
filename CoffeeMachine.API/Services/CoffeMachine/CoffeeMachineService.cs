@@ -64,7 +64,7 @@ namespace CoffeeMachine.API.Services.CoffeMachine
                 {
                     Message = message,
                     StatusCode = SpecalHttpCodes.OK,
-                    Prepared = _dateTimeProvider.UtcNow.ToString(_settings.DateTimeFormatDefault)
+                    Prepared = _dateTimeProvider.Now.ToCustomIsoFormat(_settings.DateTimeFormatDefault)
                 };
             }
             catch (HttpRequestException httpEx)
