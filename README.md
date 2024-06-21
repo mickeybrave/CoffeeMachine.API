@@ -63,6 +63,7 @@ Description of main classes used:
 > CoffeeMachineService: Manages the logic for making coffee based on weather conditions and call counts.
 > DateTimeProvider: Provides the current date and time.
 > CallCounter: Manages the count of calls to specific services.
+> DateTimeHelper: Extension Method for DateTime. This is the class I've used to implement one ofs special requirements in date time formatting. ISO-8601 date time formatting expected to be like "2024-06-21T10:29:07+12:00", whereas requirement is "2021-02-03T11:56:24+0900". So it is obviouse a difference between missing semicolon between timezone identifier part at the end. I am keen to the details, and I have implemented this convertor to follow precisely to the requirements. If it was just a typo, so we can easily remove it from the code.
 
  
 
